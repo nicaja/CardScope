@@ -1,85 +1,24 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CardScope · DINOv3 Embedding Space</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-  <style>
-    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #0d1117; color: #e6edf3; }
-    * { box-sizing: border-box; }
-    body { margin: 0; }
-    .shell { display: grid; grid-template-columns: minmax(0, 1fr) 300px; height: 100vh; }
-    main { min-width: 0; display: flex; flex-direction: column; }
-    header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid #30363d; }
-    h1 { margin: 0 12px 0 0; font-size: 16px; font-weight: 650; }
-    select, input, button { min-height: 36px; border: 1px solid #66717e; background: #161b22; color: #e6edf3; border-radius: 6px; padding: 6px 10px; font: inherit; font-size: 13px; }
-    input { width: 230px; min-width: 0; }
-    input::placeholder { color: #aab3c2; }
-    button { cursor: pointer; }
-    button:hover, select:hover { border-color: #aab3c2; }
-    :focus-visible { outline: 2px solid #78b7ee; outline-offset: 3px; }
-    ::selection { background: #35536a; color: #ffffff; }
-    #plot { width: 100%; flex: 1; min-height: 480px; }
-    .view-note { padding: 0 16px 12px; color: #aab3c2; font-size: 12px; line-height: 1.5; }
-    aside { border-left: 1px solid #30363d; background: #161b22; padding: 20px; overflow: auto; scrollbar-color: #484f58 #161b22; }
-    h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; }
-    .legend { list-style: none; margin: 0 0 26px; padding: 0; }
-    .legend li { display: flex; gap: 9px; align-items: center; margin: 9px 0; font-size: 13px; }
-    .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
-    .count { margin-left: auto; font-variant-numeric: tabular-nums; color: #aab3c2; }
-    .name { font-size: 20px; margin: 0; overflow-wrap: anywhere; }
-    .meta { color: #b8c1d0; font-size: 13px; line-height: 1.7; margin-top: 10px; overflow-wrap: anywhere; }
-    .card-preview { display: block; width: 100%; max-height: 360px; object-fit: contain; margin: 18px 0; }
-    .card-preview:not([src]) { display: none; }
-    a { color: #78b7ee; text-underline-offset: 3px; }
-    @media (max-width: 900px) {
-      .shell { grid-template-columns: 1fr; height: auto; }
-      #plot { height: 65vh; min-height: 400px; flex: auto; }
-      aside { border-left: 0; border-top: 1px solid #30363d; overflow: visible; }
-      .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
-      .card-preview { width: min(100%, 280px); }
-    }
-    @media (max-width: 480px) { header { padding: 12px; } h1 { width: 100%; } input { flex: 1 0 100%; width: 100%; } .legend { gap: 0 16px; } }
-  </style>
-</head>
-<body>
-<div class="shell">
-  <main>
-    <header>
-      <h1>CardScope · Embeddings</h1>
-      <select id="colorMode" aria-label="Color by"><option value="card_type">Card type</option><option value="set_id">Set</option><option value="source">Source</option></select>
-      <select id="typeFilter" aria-label="Card type filter"><option value="all">All card types</option></select>
-      <input id="search" type="search" aria-label="Highlight cards" placeholder="Highlight name, set or number…">
-      <button id="extent">Full extent</button>
-      <button id="reset">Reset</button>
-    </header>
-    <div id="plot" role="img" aria-label="Interactive 3D UMAP projection of DINOv3 card embeddings"></div>
-    <div id="viewNote" class="view-note" aria-live="polite"></div>
-  </main>
-  <aside>
-    <h2 id="legendTitle">Card types</h2>
-    <ul id="legend" class="legend"></ul>
-    <h2 class="name" id="detailName">Select a card</h2>
-    <div class="meta" id="detailMeta">Hover or click a point to inspect it. Drag to rotate; scroll to zoom.</div>
-    <img id="detailImage" class="card-preview" alt="">
-    <div class="meta" id="detailLinks"></div>
-    <p class="meta">DINOv3 · CLS + register-token mean<br>Saved 3D UMAP projection · 15 May 2026</p>
-  </aside>
-</div>
-<script>
-const allPoints = __POINTS_JSON__;
-const summary = __SUMMARY_JSON__;
-const palette = __PALETTE_JSON__;
-const limits = __LIMITS_JSON__;
+// The saved projection sits next to the page in data/, so any static host can serve both.
+const plot = document.getElementById('plot');
 const colorMode = document.getElementById('colorMode');
 const typeFilter = document.getElementById('typeFilter');
 const search = document.getElementById('search');
 const extent = document.getElementById('extent');
-const categoryColors = Object.values(palette);
 let fullExtent = false;
 let viewRevision = 0;
 let pendingSearch;
+function status(message) { const note = document.createElement('p'); note.className = 'plot-status'; note.textContent = message; plot.replaceChildren(note); }
+let data;
+try {
+  const response = await fetch(new URL('../data/embedding-space.json', import.meta.url));
+  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+  data = await response.json();
+} catch (error) {
+  status('The card data could not load. Reload the page to try again.');
+  throw error;
+}
+const { points: allPoints, palette, limits } = data;
+const categoryColors = Object.values(palette);
 Object.keys(palette).forEach(label => { const option = document.createElement('option'); option.value = label; option.textContent = label; typeFilter.append(option); });
 function hash(value) { let result = 2166136261; for (const char of value) result = Math.imul(result ^ char.charCodeAt(0), 16777619); return result >>> 0; }
 function color(point) {
@@ -113,15 +52,15 @@ function showPoint(point) {
   if (/^https:\/\//.test(point.marketplace_url)) { const link=document.createElement('a');link.href=point.marketplace_url;link.textContent='Open catalogue entry';link.target='_blank';link.rel='noreferrer';links.append(link); }
 }
 function render() {
-  const plot=document.getElementById('plot');
-  if (!window.Plotly) { plot.textContent='The plot could not load. Connect to the internet and reload to load Plotly.'; return; }
+  if (!window.Plotly) { status('Plotly could not load. Check your connection and reload the page.'); return; }
+  plot.querySelector('.plot-status')?.remove();
   const points=allPoints.filter(p=>typeFilter.value === 'all' || p.card_type === typeFilter.value);
   const query=search.value.trim().toLowerCase(); const matches=query ? points.filter(p=>(p.search+' '+p.card_type).toLowerCase().includes(query)) : [];
   const traces=query ? [trace(points,.10),trace(matches,.98,true)] : [trace(points,.85)];
   legend(points);
   const inView=fullExtent ? points.length : points.filter(focused).length;
   document.getElementById('viewNote').textContent=`${inView.toLocaleString()} of ${points.length.toLocaleString()} cards in ${fullExtent ? 'full' : 'focused'} view${query ? ` · ${matches.length.toLocaleString()} search matches` : ''}. ${fullExtent ? '' : 'Use Full extent to include outliers.'}`;
-  Plotly.react(plot,traces,{paper_bgcolor:'#0d1117',plot_bgcolor:'#0d1117',margin:{l:0,r:0,t:0,b:0},uirevision:viewRevision,
+  window.Plotly.react(plot,traces,{paper_bgcolor:'#0d1117',plot_bgcolor:'#0d1117',margin:{l:0,r:0,t:0,b:0},uirevision:viewRevision,
     scene:{xaxis:axis('UMAP 1',0),yaxis:axis('UMAP 2',1),zaxis:axis('UMAP 3',2),bgcolor:'#0d1117',aspectmode:'data',camera:{eye:{x:1.2,y:1.2,z:.8}}},showlegend:false},
     {responsive:true,displaylogo:false}).then(()=>{ if(plot.dataset.bound) return; plot.dataset.bound='true'; ['plotly_hover','plotly_click'].forEach(event=>plot.on(event,e=>{const point=e.points?.[0]?.customdata;if(point)showPoint(point);})); });
 }
@@ -130,6 +69,3 @@ search.addEventListener('input',()=>{clearTimeout(pendingSearch);pendingSearch=s
 extent.addEventListener('click',()=>{fullExtent=!fullExtent;viewRevision++;extent.textContent=fullExtent ? 'Focused view' : 'Full extent';render();});
 document.getElementById('reset').addEventListener('click',()=>{fullExtent=false;viewRevision++;extent.textContent='Full extent';colorMode.value='card_type';typeFilter.value='all';search.value='';render();});
 render();
-</script>
-</body>
-</html>

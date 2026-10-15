@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CardScope · DINOv3 Embedding Space</title>
+  <meta name="description" content="23,362 Japanese Pokémon cards in DINOv3 feature space, projected to three dimensions with UMAP. Rotate the projection, filter by card type and inspect any card.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230d1117'/%3E%3Ccircle cx='5' cy='10.5' r='2.2' fill='%236dd6b0'/%3E%3Ccircle cx='10.5' cy='5' r='2.2' fill='%2378b7ee'/%3E%3Ccircle cx='11' cy='11' r='2.2' fill='%23f2b66d'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/viewer.css">
+  <link rel="preload" href="data/embedding-space.json" as="fetch" crossorigin>
+  <script defer src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script type="module" src="assets/viewer.js"></script>
+</head>
+<body>
+<div class="shell">
+  <main>
+    <header>
+      <h1>CardScope · Embeddings</h1>
+      <select id="colorMode" aria-label="Colour by"><option value="card_type">Card type</option><option value="set_id">Set</option><option value="source">Source</option></select>
+      <select id="typeFilter" aria-label="Card type filter"><option value="all">All card types</option></select>
+      <input id="search" type="search" aria-label="Highlight cards" placeholder="Highlight name, set or number…">
+      <button id="extent">Full extent</button>
+      <button id="reset">Reset</button>
+    </header>
+    <div id="plot" role="img" aria-label="Interactive 3D UMAP projection of DINOv3 card embeddings"><p class="plot-status">Loading cards…</p></div>
+    <div id="viewNote" class="view-note" aria-live="polite"></div>
+  </main>
+  <aside>
+    <h2 id="legendTitle">Card types</h2>
+    <ul id="legend" class="legend"></ul>
+    <h2 class="name" id="detailName">Select a card</h2>
+    <div class="meta" id="detailMeta">Hover or click a point to inspect it. Drag to rotate; scroll to zoom.</div>
+    <img id="detailImage" class="card-preview" alt="">
+    <div class="meta" id="detailLinks"></div>
+    <p class="meta">DINOv3 · CLS + register-token mean<br>Saved 3D UMAP projection · 15 May 2026<br><a href="https://github.com/nicaja/CardScope">Code and method on GitHub</a></p>
+  </aside>
+</div>
+</body>
+</html>

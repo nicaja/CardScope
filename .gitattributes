@@ -1,2 +1,2 @@
-# Preserve the saved interactive experiment byte for byte.
-docs/embedding-space.html -text -whitespace linguist-generated=true
+# Preserve the saved experiment data byte for byte.
+docs/data/embedding-space.json -text -whitespace linguist-generated=true

@@ -34,10 +34,12 @@ OCR is optional and enabled with `--ocr` when PaddleOCR is installed. `--debug-d
 
 ```sh
 python -m pip install -r requirements-viz.txt
-python render_embedding_space.py --points reports/experiment/points.json --metadata-dir cache/metadata/official_jp/details --output-dir reports/viewer
+python render_embedding_space.py --points reports/experiment/points.json --metadata-dir cache/metadata/official_jp/details --output-dir ../../docs
 ```
 
-The renderer reuses the saved coordinates, labels card types from cached official catalogue pages, and writes a dark preview plus a standalone interactive HTML file. It does not compute embeddings or refit UMAP. Missing card-type labels remain Unknown.
+The renderer reuses the saved coordinates, labels card types from cached official catalogue pages, and writes the data the interactive page loads (`docs/data/embedding-space.json`), a dark still figure, and the turning preview at the top of the main README. It does not compute embeddings or refit UMAP. Missing card-type labels remain Unknown.
+
+GitHub Pages serves the page from `docs/`. Browsers do not let a page opened from disk fetch its data, so to view it locally, serve the folder with `python -m http.server --directory ../../docs` and open `http://localhost:8000`.
 
 ## Checks and limits
 
