@@ -78,26 +78,33 @@ def draw(points: list[dict], coords: np.ndarray, visible: np.ndarray, bounds: np
     fig.text(.05, .045, f'{len(points):,} cards · CLS + register-token mean · 3D UMAP\nFocused view: {visible.sum():,} points shown; all points remain in the interactive viewer.', fontsize=10, color='#aab3c2', linespacing=1.6)
     return fig, ax
 
-def write_turntable(fig: plt.Figure, ax: plt.Axes, path: Path, frames: int = 72, dpi: int = 80) -> None:
-    """Turn the still figure's view once for the README.
+def write_turntable(fig: plt.Figure, ax: plt.Axes, path: Path, frames: int = 288, dpi: int = 80) -> None:
+    """Turn the still figure's view once, slowly, for the README: 1.25 degrees per 100 ms frame.
 
+    The axes are hidden while turning, because matplotlib moves axis lines and titles to whichever
+    box edges face the camera, so they jump sides every quarter turn. Card types keep their drawing
+    order for the same reason; depth-sorting whole groups makes overlapping colours swap suddenly.
     The GIF palette is built from the figure's own colours faded into the background, so every
     card type keeps its colour and the background stays exactly BACKGROUND.
     """
     fig.set_dpi(dpi)
+    ax.set_axis_off()
+    ax.computed_zorder = False
     images = []
     for step in range(frames):
         ax.view_init(elev=21, azim=-62 + 360 * step / frames)
         fig.canvas.draw()
         images.append(Image.fromarray(np.asarray(fig.canvas.buffer_rgba())[..., :3]))
     ax.view_init(elev=21, azim=-62)
+    ax.computed_zorder = True
+    ax.set_axis_on()
     background = np.array(to_rgb(BACKGROUND))
     inks = [np.array(to_rgb(ink)) for ink in [*PALETTE.values(), '#e6edf3', '#aab3c2', '#484f58', '#29313c']]
     colours = [background] + [background + t * (ink - background) for ink in inks for t in np.linspace(.1, 1, 10)]
     palette = Image.new('P', (1, 1))
     palette.putpalette([round(255 * channel) for colour in colours for channel in colour])
     indexed = [image.quantize(palette=palette, dither=Image.Dither.NONE) for image in images]
-    indexed[0].save(path, save_all=True, append_images=indexed[1:], duration=80, loop=0)
+    indexed[0].save(path, save_all=True, append_images=indexed[1:], duration=100, loop=0)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
