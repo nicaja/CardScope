@@ -32,7 +32,7 @@ function trace(points, opacity, highlighted = false) {
     text:points.map(p => `${escapeText(p.name)}<br>${escapeText(p.set_id)} · ${escapeText(p.number)}<br>${escapeText(p.card_type)}`),
     hovertemplate:'%{text}<extra></extra>', marker:{size:highlighted ? 5 : 2.2, opacity, color:points.map(color), line:{width:0}} };
 }
-function axis(title, i) { return { title:{text:title,font:{size:12}}, color:'#aab3c2', gridcolor:'#29313c', zeroline:false, showbackground:false, nticks:5, ...(fullExtent ? {autorange:true} : {range:limits[i]}) }; }
+function axis(title, i) { return { title:{text:title,font:{size:12}}, color:'#aab3c2', gridcolor:'#29313c', zeroline:false, showbackground:false, showspikes:false, nticks:5, ...(fullExtent ? {autorange:true} : {range:limits[i]}) }; }
 function legend(points) {
   const list = document.getElementById('legend'); list.replaceChildren();
   document.getElementById('legendTitle').textContent = colorMode.value === 'set_id' ? 'Sets · inspect a point for its set' : 'Card types';
