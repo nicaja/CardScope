@@ -8,7 +8,7 @@ An ongoing research project exploring how visual embeddings identify Japanese Po
 
 ## Inside the embedding space
 
-The [interactive view](https://nicaja.github.io/CardScope/) runs in the browser. Rotate the projection, highlight a card or set, filter by card type, or switch between type, set, and source colours. Hover over a point to see the card and its catalogue entry. Use **Full extent** to see outliers beyond the initial close view.
+The [interactive view](https://nicaja.github.io/CardScope/) runs in the browser. Rotate the projection, highlight a card or set, filter by card type, or switch between type and set colours. Hover over a point to see the card and its catalogue entry. Use **Full extent** to see outliers beyond the initial close view.
 
 The saved experiment contains **23,362 cards** represented by **DINOv3 ViT-B/16**, using the mean of the CLS token and four register tokens. The full-card vectors are projected into three dimensions with UMAP and cosine distance. The original coordinates are retained.
 

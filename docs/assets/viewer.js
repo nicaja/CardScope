@@ -23,7 +23,6 @@ Object.keys(palette).forEach(label => { const option = document.createElement('o
 function hash(value) { let result = 2166136261; for (const char of value) result = Math.imul(result ^ char.charCodeAt(0), 16777619); return result >>> 0; }
 function color(point) {
   if (colorMode.value === 'card_type') return palette[point.card_type];
-  if (colorMode.value === 'source') return point.source === 'official' ? '#6dd6b0' : '#f2b66d';
   return categoryColors[hash(point.set_id) % categoryColors.length];
 }
 function escapeText(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c])); }
@@ -36,17 +35,16 @@ function trace(points, opacity, highlighted = false) {
 function axis(title, i) { return { title:{text:title,font:{size:12}}, color:'#aab3c2', gridcolor:'#29313c', zeroline:false, showbackground:false, nticks:5, ...(fullExtent ? {autorange:true} : {range:limits[i]}) }; }
 function legend(points) {
   const list = document.getElementById('legend'); list.replaceChildren();
-  document.getElementById('legendTitle').textContent = colorMode.value === 'set_id' ? 'Sets · inspect a point for its set' : colorMode.value === 'source' ? 'Catalogue sources' : 'Card types';
+  document.getElementById('legendTitle').textContent = colorMode.value === 'set_id' ? 'Sets · inspect a point for its set' : 'Card types';
   if (colorMode.value === 'set_id') { const li = document.createElement('li'); li.textContent = `${new Set(points.map(p=>p.set_id)).size} sets; colours repeat across sets.`; list.append(li); return; }
-  const labels = colorMode.value === 'source' ? ['official','pkmn.gg'] : Object.keys(palette);
-  labels.forEach(label => { const selected = points.filter(p=>p[colorMode.value] === label); if (!selected.length) return;
+  Object.keys(palette).forEach(label => { const selected = points.filter(p=>p.card_type === label); if (!selected.length) return;
     const li=document.createElement('li'), swatch=document.createElement('span'), name=document.createElement('span'), count=document.createElement('span');
     swatch.className='swatch'; swatch.style.background=color(selected[0]); name.textContent=label; count.className='count'; count.textContent=selected.length.toLocaleString(); li.append(swatch,name,count); list.append(li); });
 }
 function showPoint(point) {
   document.getElementById('detailName').textContent = point.name || point.id;
   const meta=document.getElementById('detailMeta'); meta.replaceChildren();
-  [point.card_type, `${point.set_id} · ${point.number}`, point.set_name, point.uid, `Source: ${point.source}`].filter(Boolean).forEach(value=>{const line=document.createElement('div');line.textContent=value;meta.append(line);});
+  [point.card_type, `${point.set_id} · ${point.number}`, point.set_name, point.uid].filter(Boolean).forEach(value=>{const line=document.createElement('div');line.textContent=value;meta.append(line);});
   const img=document.getElementById('detailImage'); if (/^https:\/\//.test(point.image_url)) img.src=point.image_url; else img.removeAttribute('src'); img.alt=point.name || point.id;
   const links=document.getElementById('detailLinks'); links.replaceChildren();
   if (/^https:\/\//.test(point.marketplace_url)) { const link=document.createElement('a');link.href=point.marketplace_url;link.textContent='Open catalogue entry';link.target='_blank';link.rel='noreferrer';links.append(link); }
